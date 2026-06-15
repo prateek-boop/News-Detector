@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Browser Profile Directories (created by Selenium)
+AmountExtractionHeuristicRegexes/
+AutofillStates/
+CertificateRevocation/
+component_crx_cache/
+CookieReadinessList/
+Crowd Deny/
+Default/
+extensions_crx_cache/
+FileTypePolicies/
+FirstPartySetsPreloaded/
+GraphiteDawnCache/
+GrShaderCache/
+hyphen-data/
+MEIPreload/
+NativeMessagingHosts/
+OnDeviceHeadSuggestModel/
+OpenCookieDatabase/
+OptimizationHints/
+OriginTrials/
+PKIMetadata/
+PrivacySandboxAttestationsPreloaded/
+ProbabilisticRevealTokenRegistry/
+Profile 1/
+Safe Browsing/
+SafetyTips/
+segmentation_platform/
+ShaderCache/
+SSLErrorAssistant/
+Subresource Filter/
+TpcdMetadata/
+TrustTokenKeyCommitments/
+WasmTtsEngine/
+WidevineCdm/
+ZxcvbnData/
+
+# Browser Profile Files (created by Selenium)
+DevToolsActivePort
+First Run
+Last Version
+Local State
+Variations
+first_party_sets.db
+first_party_sets.db-journal
+
+# Scraped Data (keep in repo but can be ignored if too large)
+# *.csv
+# *.json
+# csv/
+# json/
+# sql/
+
+# URL files
+# *.txt

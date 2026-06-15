@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+.env
+.venv/
+
+# VS Code
+.vscode/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+.Python
+build/
+dist/
+.eggs/
+*.egg-info/
+.installed.cfg
+.python-version
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+
+# Index and cache files
+/index_store/
+*.cache
+*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Selenium / browser artifacts
+*.crx
+profile/
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# PyCharm
+.idea/
+
+# Hugging Face cache
+transformers_cache/
+.huggingface/
+
+# PyTorch / HuggingFace artifacts
+*.pt
+*.bin
+
+# Ignore secrets
+*.env
+
+# Scraping output
+scrapping-main/downloaded_files/

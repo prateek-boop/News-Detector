@@ -1,0 +1,277 @@
+import time
+import random
+from urllib.parse import quote_plus
+from seleniumbase import Driver
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
+from django.utils import timezone
+from .models import DorkQuery, CrawledLink
+
+class GoogleDorkCrawler:
+    def __init__(self, chromium_profile_path="/home/sonu/.config/chromium/Profile 3", headless=False):
+        self.chromium_profile_path = chromium_profile_path
+        self.driver = None
+        self.headless = headless
+        
+    def setup_driver(self):
+        """Setup SeleniumBase driver with UC mode (undetected-chromedriver)"""
+        self.driver = Driver(
+            uc=True,  # Use undetected-chromedriver mode
+            headless2=self.headless,  # headless2 for UC mode
+            user_data_dir="/home/sonu/.config/chromium/Profile 3",
+            disable_csp=True,  # Disable content security policy
+        )
+        
+    def human_delay(self, min_delay=2, max_delay=5):
+        """Random delay to mimic human behavior"""
+        time.sleep(random.uniform(min_delay, max_delay))
+        
+    def scroll_slowly(self):
+        """Scroll page slowly to mimic human behavior"""
+        try:
+            scroll_height = self.driver.execute_script("return document.body.scrollHeight")
+            current_position = 0
+            scroll_step = random.randint(300, 500)
+            
+            while current_position < scroll_height:
+                current_position += scroll_step
+                self.driver.execute_script(f"window.scrollTo(0, {current_position});")
+                time.sleep(random.uniform(0.2, 0.5))
+        except Exception as e:
+            print(f"  Scroll error: {e}")
+            
+    def search_google(self, dork_query, max_pages=10):
+        """
+        Search Google with dork query and collect results
+        
+        Args:
+            dork_query: DorkQuery model instance
+            max_pages: Maximum number of pages to crawl (default 10)
+        """
+        try:
+            if not self.driver:
+                self.setup_driver()
+            
+            results = []
+            
+            for page in range(max_pages):
+                start = page * 10
+                search_url = f"https://www.google.com/search?q={quote_plus(dork_query.query)}&start={start}"
+                
+                print(f"Crawling page {page + 1} for query: {dork_query.query}")
+                print(f"URL: {search_url}")
+                self.driver.get(search_url)
+                
+                # Random delay
+                self.human_delay(3, 6)
+                
+                # Scroll to load all results
+                self.scroll_slowly()
+                
+                # Check for CAPTCHA or unusual activity detection
+                if "unusual traffic" in self.driver.page_source.lower():
+                    print("Google detected unusual traffic! Stopping crawler.")
+                    break
+                
+                # Extract search results
+                page_results = self.extract_results(dork_query, page + 1)
+                results.extend(page_results)
+                
+                # Check if there are more results
+                try:
+                    next_button = self.driver.find_element(By.ID, "pnnext")
+                    if not next_button.is_enabled():
+                        print("No more results available")
+                        break
+                except NoSuchElementException:
+                    # It's okay if next button not found, we'll continue
+                    pass
+                
+                # Longer delay between pages
+                self.human_delay(5, 10)
+            
+            # Update last crawled time
+            dork_query.last_crawled = timezone.now()
+            dork_query.save()
+            
+            return results
+            
+        except Exception as e:
+            print(f"Error during crawling: {str(e)}")
+            return []
+    
+    def extract_results(self, dork_query, page_number):
+        """Extract search results from current page"""
+        results = []
+        
+        try:
+            # Google uses different selectors - try multiple approaches
+            search_results = []
+            
+            # Try finding links with h3 (main results)
+            result_links = self.driver.find_elements(By.CSS_SELECTOR, "a.zReHs, a:has(h3)")
+            
+            if not result_links:
+                # Fallback to div.g containers
+                search_results = self.driver.find_elements(By.CSS_SELECTOR, "div.g")
+            else:
+                # Process links directly
+                print(f"  Found {len(result_links)} result links")
+                
+                for index, link_element in enumerate(result_links, 1):
+                    try:
+                        url = link_element.get_attribute("href")
+                        
+                        # Skip invalid or Google URLs
+                        if not url or not url.startswith("http") or "google.com" in url:
+                            continue
+                        
+                        # Extract title from h3
+                        title = ""
+                        try:
+                            title_element = link_element.find_element(By.TAG_NAME, "h3")
+                            title = title_element.text
+                        except NoSuchElementException:
+                            title = link_element.text[:100] if link_element.text else ""
+                        
+                        # Extract snippet from nearby elements
+                        snippet = ""
+                        try:
+                            # Try to find parent container and get snippet
+                            parent = link_element.find_element(By.XPATH, "./ancestor::div[contains(@class, 'g')]")
+                            snippet_elements = parent.find_elements(By.CSS_SELECTOR, "div.VwiC3b, span.aCOpRe, div[style*='-webkit-line-clamp']")
+                            if snippet_elements:
+                                snippet = snippet_elements[0].text
+                        except Exception:
+                            pass
+                        
+                        # Save to database
+                        crawled_link, created = CrawledLink.objects.get_or_create(
+                            dork_query=dork_query,
+                            url=url,
+                            defaults={
+                                'title': title,
+                                'snippet': snippet,
+                                'position': index,
+                                'page_number': page_number
+                            }
+                        )
+                        
+                        if created:
+                            print(f"  [{page_number}:{index}] {title[:50] if title else url[:50]}...")
+                            results.append(crawled_link)
+                        else:
+                            print(f"  [{page_number}:{index}] Already exists: {url[:60]}...")
+                            
+                    except Exception as e:
+                        print(f"  Error extracting link {index}: {str(e)}")
+                        continue
+                
+                return results
+            
+            # Fallback: process div.g containers if no direct links found
+            if not search_results:
+                print(f"  No search results found with common selectors")
+                # Debug: save page source
+                with open(f'debug_page_{page_number}.html', 'w', encoding='utf-8') as f:
+                    f.write(self.driver.page_source)
+                print(f"  Saved page source to debug_page_{page_number}.html")
+                return results
+            
+            print(f"  Found {len(search_results)} result containers")
+            
+            for index, result in enumerate(search_results, 1):
+                try:
+                    # Extract link - try multiple approaches
+                    url = None
+                    link_element = None
+                    
+                    # Try finding a link with h3 parent (most common)
+                    try:
+                        link_element = result.find_element(By.CSS_SELECTOR, "a:has(h3)")
+                        url = link_element.get_attribute("href")
+                    except NoSuchElementException:
+                        pass
+                    
+                    # Fallback: find first http link
+                    if not url:
+                        try:
+                            links = result.find_elements(By.TAG_NAME, "a")
+                            for link in links:
+                                href = link.get_attribute("href")
+                                if href and href.startswith("http") and "google.com" not in href:
+                                    url = href
+                                    link_element = link
+                                    break
+                        except Exception:
+                            pass
+                    
+                    # Skip if no valid URL found
+                    if not url or not url.startswith("http") or "google.com" in url:
+                        continue
+                    
+                    # Extract title
+                    title = ""
+                    try:
+                        title_element = result.find_element(By.CSS_SELECTOR, "h3")
+                        title = title_element.text
+                    except NoSuchElementException:
+                        try:
+                            # Fallback to link text
+                            if link_element:
+                                title = link_element.text
+                        except Exception:
+                            title = ""
+                    
+                    # Extract snippet
+                    snippet = ""
+                    snippet_selectors = [
+                        "div[data-snf='nke7rc']",
+                        "div.VwiC3b",
+                        "div[style*='-webkit-line-clamp']",
+                        "span.aCOpRe",
+                        "div.s"
+                    ]
+                    
+                    for selector in snippet_selectors:
+                        try:
+                            snippet_element = result.find_element(By.CSS_SELECTOR, selector)
+                            snippet = snippet_element.text
+                            if snippet:
+                                break
+                        except NoSuchElementException:
+                            continue
+                    
+                    # Save to database (with lock for thread safety)
+                    with self.db_lock:
+                        crawled_link, created = CrawledLink.objects.get_or_create(
+                            dork_query=dork_query,
+                            url=url,
+                            defaults={
+                                'title': title,
+                                'snippet': snippet,
+                                'position': index,
+                                'page_number': page_number
+                            }
+                        )
+                    
+                    if created:
+                        print(f"  [{page_number}:{index}] {title[:50] if title else url[:50]}...")
+                        results.append(crawled_link)
+                    else:
+                        print(f"  [{page_number}:{index}] Already exists: {url[:60]}...")
+                        
+                except Exception as e:
+                    print(f"  Error extracting result {index}: {str(e)}")
+                    continue
+                    
+        except Exception as e:
+            print(f"Error extracting results: {str(e)}")
+        
+        return results
+    
+    def close(self):
+        """Close the browser"""
+        if self.driver:
+            self.driver.quit()
+            self.driver = None

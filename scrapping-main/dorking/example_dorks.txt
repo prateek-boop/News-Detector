@@ -1,0 +1,72 @@
+# Example Google Dork Queries
+
+# File Type Searches
+site:example.com filetype:pdf
+site:example.com filetype:doc OR filetype:docx
+site:example.com filetype:xls OR filetype:xlsx
+site:example.com filetype:sql
+site:example.com filetype:log
+
+# Sensitive Information
+intitle:"index of" "password.txt"
+intitle:"index of" "database.sql"
+inurl:admin intitle:login
+inurl:wp-admin intitle:login
+filetype:env "DB_PASSWORD"
+
+# Configuration Files
+filetype:ini "password"
+filetype:conf intext:password
+filetype:yaml "password"
+ext:xml "password"
+inurl:.git intitle:"index of"
+
+# Backup Files
+intitle:"index of" "backup"
+inurl:backup filetype:sql
+site:example.com ext:bak
+site:example.com ext:old
+
+# Login Pages
+inurl:login.php
+intitle:"Login" inurl:admin
+inurl:wp-login.php
+inurl:admin/login.php
+intitle:"Dashboard" inurl:admin
+
+# Error Messages
+intitle:"Error" "SQL syntax"
+"Fatal error" "SQL"
+"Warning: mysql_" intitle:"php"
+"MySQL Error"
+
+# Directory Listings
+intitle:"index of" inurl:admin
+intitle:"index of" "parent directory"
+intitle:"Apache Server Status"
+
+# Vulnerable Servers
+inurl:phpinfo.php
+inurl:test.php
+inurl:shell.php
+inurl:phpMyAdmin
+
+# Email Lists
+filetype:xls inurl:"email.xls"
+filetype:csv "email"
+"@gmail.com" filetype:csv
+
+# Webcams
+intitle:"Live View / - AXIS"
+inurl:view/view.shtml
+intitle:"EvoCam" inurl:"webcam.html"
+
+# Database Dumps
+filetype:sql "MySQL dump"
+filetype:sql intext:password
+"-- phpMyAdmin SQL Dump"
+
+# API Keys
+"api_key" filetype:json
+"Authorization: Bearer" filetype:json
+"api_secret" site:github.com
