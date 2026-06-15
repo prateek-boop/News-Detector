@@ -1,4 +1,4 @@
-# 🤖 F.R.I.D.A.Y. - AI News Authenticator
+# F.R.I.D.A.Y. - AI News Authenticator
 
 **F.R.I.D.A.Y.** (Fact-based Retrieval Intelligence with Distributed AI & Verification Year-round) is an advanced **AI-powered News Verification and Fact-Checking System** built using a **Hybrid Retrieval-Augmented Generation (RAG) Architecture** with integrated web scraping capabilities.
 
@@ -21,7 +21,7 @@ The system architecture combines:
 * **FAISS vector database** for fast semantic search
 * **BM25 lexical retrieval** for keyword matching
 * **Hybrid ranking** for merged results
-* **Multi-source web scraping** (LinkedIn, Unstop, Dorking)
+* **Multi-source web scraping** 
 * **LLM caching** to reduce latency and costs
 * **Query caching** for repeated questions
 
@@ -62,8 +62,6 @@ Combines dual retrieval strategies:
 
 Integrated scraping tools for:
 
-* **LinkedIn Data**: Contact extraction, profile scraping, email collection
-* **Unstop/Devfolio**: Event and hackathon participant tracking
 * **Google Dorking**: Advanced search result aggregation
 * **Real-time Collection**: Fetches latest information unavailable in static datasets
 
@@ -158,7 +156,7 @@ The system includes:
 ## 🛠️ Tech Stack
 
 ### Core Framework
-* **Python** 3.8+
+* **Python** 3.10+ , 3.14 (not rcommended for now) 
 * **PyTorch** (torch)
 * **Transformers** (Hugging Face)
 
@@ -208,14 +206,6 @@ RAG/
 │   └── source_hashes.json      # Source file hashes for tracking changes
 │
 └── scrapping-main/             # Multi-source web scraping infrastructure
-    ├── linkedin/               # LinkedIn profile & contact scraper
-    │   ├── extract_linkedin_emails.py
-    │   ├── extract_linkedin_emails_sb.py
-    │   └── ... (contact extraction tools)
-    │
-    ├── unstop_crawler/         # Unstop/Devfolio hackathon scraper
-    │   ├── capture_devfolio_api.py
-    │   └── ... (event data collection)
     │
     ├── dorking/                # Google Dorking search results aggregator
     │   ├── crawler/
@@ -238,8 +228,6 @@ RAG/
 
 ### Step 2: Web Scraping (Parallel Collection)
 
-* LinkedIn scraper extracts contacts and emails
-* Unstop crawler collects hackathon participant data
 * Google Dorking aggregates search results
 * Data stored in SQLite and exported to JSON/CSV
 
@@ -313,8 +301,6 @@ Results from both methods are retrieved independently.
 
 * **News Fact-Checking**: Verify news claims against indexed knowledge base
 * **Misinformation Detection**: Identify potentially false claims
-* **Contact Discovery**: Extract contacts from LinkedIn and Unstop
-* **Event Intelligence**: Track hackathons and tech events via Unstop crawler
 * **Search Intelligence**: Aggregate and analyze Google Dorking results
 * **Claim Verification**: Cross-reference against CSV datasets
 * **Research Assistance**: Semantic search over document collections
@@ -371,21 +357,6 @@ python rag_pipeline.py --query "Is this news claim true?"
 python rag_pipeline.py --query "Verify this claim" --top-k 5 --use-cache
 ```
 
-### Web Scraping
-
-For LinkedIn data extraction:
-```bash
-cd scrapping-main/linkedin
-python extract_linkedin_emails.py
-```
-
-For Unstop/Devfolio data:
-```bash
-cd scrapping-main/unstop_crawler
-python capture_devfolio_api.py
-```
-
----
 
 ## 🔮 Future Improvements
 
@@ -411,11 +382,7 @@ Contributions, issues, and feature requests are welcome.
 
 ---
 
-## 📜 License
 
-This project is licensed under the MIT License.
-
----
 
 ## 👨‍💻 About F.R.I.D.A.Y.
 
